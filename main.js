@@ -1,141 +1,102 @@
+/* Shared navigation. Gallery interactions are in gallery.js. No libraries or build step required. */
 (() => {
-  const nav = document.querySelector('.main-nav');
+  'use strict';
+  document.documentElement.classList.add('js');
   const header = document.querySelector('.site-header');
-  const navToggle = document.getElementById('nav-toggle');
+  const nav = document.querySelector('.main-nav');
+  const menuButton = document.getElementById('nav-menu-button');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  if (!nav) return;
-
-  const cleanPath = () => {
-    const path = window.location.pathname.replace(/\/index\.html$/, '/');
-    return `${path}${window.location.search}`;
+  const closeMenu = () => {
+    header?.classList.remove('menu-open');
+    menuButton?.setAttribute('aria-expanded', 'false');
+    menuButton?.setAttribute('aria-label', 'Open navigation');
+    // Closed mobile links must not remain keyboard-focusable.
+    if (nav) nav.inert = window.matchMedia('(max-width: 1100px)').matches;
   };
-
-  const cleanAddressBar = () => {
-    if (window.location.hash || /\/index\.html$/.test(window.location.pathname)) {
-      window.history.replaceState(null, '', cleanPath());
-    }
-  };
-
-  const navLinks = Array.from(
-    nav.querySelectorAll('a[href^="#"]:not(.nav-cta)')
-  );
-
-  const items = navLinks
-    .map((link) => {
-      const id = link.getAttribute('href').slice(1);
-      const section = document.getElementById(id);
-      return section ? { link, section } : null;
-    })
-    .filter(Boolean);
-
-  if (!items.length) return;
-
-  const setActiveLink = (activeLink) => {
-    navLinks.forEach((link) => {
-      const isActive = link === activeLink;
-      link.classList.toggle('active', isActive);
-
-      if (isActive) {
-        link.setAttribute('aria-current', 'page');
-      } else {
-        link.removeAttribute('aria-current');
+  if (menuButton && header && nav) {
+    menuButton.hidden = false;
+    menuButton.addEventListener('click', () => {
+      const open = header.classList.toggle('menu-open');
+      menuButton.setAttribute('aria-expanded', String(open));
+      menuButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+      nav.inert = !open && window.matchMedia('(max-width: 1100px)').matches;
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && header.classList.contains('menu-open')) {
+        closeMenu();
+        menuButton.focus();
       }
     });
-  };
-
-  const updateActiveNav = () => {
-    const headerHeight = header ? header.offsetHeight : 0;
-    const readingLine = window.scrollY + headerHeight + Math.min(window.innerHeight * 0.3, 220);
-
-    let activeItem = items[0];
-
-    for (const item of items) {
-      if (item.section.offsetTop <= readingLine) {
-        activeItem = item;
-      } else {
-        break;
-      }
-    }
-
-    const nearBottom =
-      window.innerHeight + window.scrollY >=
-      document.documentElement.scrollHeight - 4;
-
-    if (nearBottom) {
-      activeItem = items[items.length - 1];
-    }
-
-    setActiveLink(activeItem.link);
-  };
-
-  const scrollToSection = (target, smooth = true) => {
-    if (!target) return;
-
-    const headerHeight = header ? header.offsetHeight : 0;
-    const top = target.getBoundingClientRect().top + window.scrollY - headerHeight;
-
-    window.scrollTo({
-      top: Math.max(0, top),
-      behavior: smooth ? 'smooth' : 'auto',
+    document.addEventListener('click', (event) => {
+      if (!header.contains(event.target)) closeMenu();
     });
-  };
-
-  // Keep section navigation functional without exposing #section in the URL.
-  document.querySelectorAll('a[href^="#"]').forEach((link) => {
-    const href = link.getAttribute('href');
-    if (!href || href === '#') return;
-
-    const target = document.getElementById(href.slice(1));
-    if (!target) return;
-
-    link.addEventListener('click', (event) => {
-      event.preventDefault();
-      scrollToSection(target, true);
-      cleanAddressBar();
-
-      if (navLinks.includes(link)) {
-        setActiveLink(link);
-      }
-
-      if (navToggle) navToggle.checked = false;
-    });
-  });
-
-  // If another page links to index.html#gallery, first honor the target,
-  // then immediately clean the address bar back to /.
-  const initialHash = window.location.hash;
-  if (initialHash && initialHash.length > 1) {
-    const initialTarget = document.getElementById(initialHash.slice(1));
-    if (initialTarget) {
-      window.requestAnimationFrame(() => {
-        scrollToSection(initialTarget, false);
-        updateActiveNav();
-        cleanAddressBar();
-      });
-    } else {
-      cleanAddressBar();
-    }
-  } else {
-    cleanAddressBar();
+    nav.addEventListener('click', (event) => { if (event.target.closest('a')) closeMenu(); });
+    window.addEventListener('resize', closeMenu);
+    closeMenu();
   }
 
-  let ticking = false;
-  const requestNavUpdate = () => {
-    if (ticking) return;
-    ticking = true;
-
-    window.requestAnimationFrame(() => {
-      updateActiveNav();
-      ticking = false;
+  const homepage = !!document.getElementById('home');
+  const cleanAddressBar = () => {
+    if (!homepage || !/^https?:$/.test(location.protocol)) return;
+    const path = location.pathname.replace(/\/index\.html$/, '/');
+    if (location.hash || path !== location.pathname) {
+      try { history.replaceState(history.state, '', path + location.search); } catch (_) { /* Local preview fallback. */ }
+    }
+  };
+  const navItems = Array.from(nav?.querySelectorAll('a[href^="#"]:not(.nav-cta)') || [])
+    .map((link) => ({ link, section: document.getElementById(link.hash.slice(1)) }))
+    .filter(({ section }) => section);
+  const setActiveLink = (selected) => {
+    navItems.forEach(({ link }) => {
+      const active = link === selected;
+      link.classList.toggle('active', active);
+      if (active) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
     });
   };
-
-  window.addEventListener('scroll', requestNavUpdate, { passive: true });
-  window.addEventListener('resize', requestNavUpdate);
-  window.addEventListener('load', () => {
+  const updateActiveNav = () => {
+    if (!navItems.length) return;
+    const readingLine = window.scrollY + (header?.offsetHeight || 0) + Math.min(innerHeight * .3, 220);
+    let active = navItems[0];
+    navItems.forEach((item) => {
+      const top = item.section.getBoundingClientRect().top + window.scrollY;
+      if (top <= readingLine) active = item;
+    });
+    if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) active = navItems.at(-1);
+    setActiveLink(active.link);
+  };
+  const scrollToSection = (target, smooth = true) => {
+    const top = target.getBoundingClientRect().top + scrollY - (header?.offsetHeight || 0);
+    window.scrollTo({ top: Math.max(0, top), behavior: smooth && !reducedMotion.matches ? 'smooth' : 'instant' });
+  };
+  document.querySelectorAll('a[href^="#"]').forEach((link) => {
+    if (!link.hash) return;
+    const target = document.getElementById(link.hash.slice(1));
+    if (!target) return;
+    link.addEventListener('click', (event) => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      closeMenu();
+      scrollToSection(target);
+      cleanAddressBar();
+    });
+  });
+  const initialHash = location.hash;
+  const honorInitialTarget = () => {
+    const target = initialHash ? document.getElementById(initialHash.slice(1)) : null;
+    if (target) scrollToSection(target, false);
     updateActiveNav();
     cleanAddressBar();
-  });
+  };
+  window.requestAnimationFrame(honorInitialTarget);
+  window.addEventListener('load', honorInitialTarget, { once: true });
+  let navFrame = 0;
+  const requestNavUpdate = () => {
+    if (navFrame) return;
+    navFrame = requestAnimationFrame(() => { updateActiveNav(); navFrame = 0; });
+  };
+  window.addEventListener('scroll', requestNavUpdate, { passive: true });
+  window.addEventListener('resize', requestNavUpdate);
 
-  updateActiveNav();
 })();
