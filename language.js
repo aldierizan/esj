@@ -14,10 +14,10 @@
     'Locations': 'Lokasi',
     'Sign Up Now': 'Daftar Sekarang',
     'Welcome to': 'Selamat Datang di',
-    'Licensed Indonesian Migrant Worker Placement Company (P3MI) with more than 30 years of experience in international workforce placement.': 'Perusahaan Penempatan Pekerja Migran Indonesia (P3MI) berizin dengan pengalaman lebih dari 30 tahun dalam penempatan tenaga kerja internasional.',
     'Partner With Us': 'Bermitra dengan Kami',
     'Explore Our Services': 'Lihat Layanan Kami',
     'Years of Experience': 'Tahun Pengalaman',
+    'Licensed Indonesian Migrant Worker Placement Company (P3MI) with more than 30 years of experience in international workforce placement.': 'Perusahaan Penempatan Pekerja Migran Indonesia (P3MI) berizin dengan pengalaman lebih dari 30 tahun dalam penempatan tenaga kerja internasional.',
     'PT Ekasanti Jayamulia is an Indonesian Migrant Workers Placement Company (P3MI) established in 1991 and licensed by the Minister of Manpower to provide services for the placement of Indonesian migrant workers abroad.': 'PT Ekasanti Jayamulia adalah Perusahaan Penempatan Pekerja Migran Indonesia (P3MI) yang didirikan pada tahun 1991 dan berizin dari Menteri Ketenagakerjaan untuk menyediakan layanan penempatan pekerja migran Indonesia ke luar negeri.',
     'Why Us?': 'Mengapa Kami?',
     'Over 30 Years of Industry Experience': 'Lebih dari 30 Tahun Pengalaman di Industri',
@@ -171,9 +171,9 @@
 
     const onSignup = !!document.getElementById('signup-form');
     if (lang === 'id') {
-      document.title = onSignup ? 'Pendaftaran | PT Ekasanti Jayamulia' : 'PT Ekasanti Jayamulia | Penempatan Tenaga Kerja Internasional';
+      document.title = onSignup ? 'Pendaftaran | PT Ekasanti Jayamulia' : 'PT Ekasanti Jayamulia | Licensed Indonesian Workforce Agency';
     } else {
-      document.title = onSignup ? 'Sign Up | PT Ekasanti Jayamulia' : 'PT Ekasanti Jayamulia | International Workforce Placement';
+      document.title = onSignup ? 'Sign Up | PT Ekasanti Jayamulia' : 'PT Ekasanti Jayamulia | Licensed Indonesian Workforce Agency';
     }
 
     if (persist) {
