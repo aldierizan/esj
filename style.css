@@ -1888,3 +1888,7 @@ h2 { font-weight: 700; line-height: 1.2; font-size: clamp(2rem, 3.3vw, 2.8rem); 
     margin: 8px 0 4px;
   }
 }
+
+/* Centered copyright footer */
+.footer-bottom { justify-content: center; text-align: center; }
+@media (max-width: 760px) { .footer-bottom { align-items: center; } }
